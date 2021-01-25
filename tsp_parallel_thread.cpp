@@ -11,6 +11,7 @@
 #include <chrono>
 #include "genetic_parallel.cpp"
 #include <iostream>
+#include <numeric>
 #include <set>
 #include <stdlib.h>
 #include <thread>
@@ -74,6 +75,24 @@ std::vector<path_t>* init_population(int ** graph, int size_population, int n_no
 }
 
 path_t travellingSalesmanSolver(int ** graph, int size, int size_population, int epochs, int nw) {
+
+    // TIMES
+#ifdef PRINT_TIME
+    crossover_times = new std::vector<int>(nw);
+    mutation_times = new std::vector<int>(nw);
+    fitness_times = new std::vector<int>(nw);
+    selection_times = new std::vector<int>(nw);
+
+    for(int i=0; i<nw; i++){
+        crossover_times->push_back(0);
+        mutation_times->push_back(0);
+        fitness_times->push_back(0);
+        selection_times->push_back(0);
+    }
+#endif
+
+
+
     path_t min_path;
     min_path.cost = INT_MAX;
     float p_crossover = 0.2, p_mutation = 0.2;
@@ -81,13 +100,6 @@ path_t travellingSalesmanSolver(int ** graph, int size, int size_population, int
     // Initialise the population
     std::vector<path_t>* population;
     population = init_population(graph, size_population, size);
-
-    // crossover_time = 0;
-    // mutation_time = 0;
-    // fitness_time = 0;
-    // selection_time = 0;
-    // shuffling_time = 0;
-
 
     std::vector<RANGE> ranges(nw);
 
@@ -114,7 +126,8 @@ path_t travellingSalesmanSolver(int ** graph, int size, int size_population, int
                                 population,
                                 ranges[j],
                                 p_crossover,
-                                p_mutation
+                                p_mutation,
+                                j
             ));
         }
         
@@ -147,20 +160,32 @@ path_t travellingSalesmanSolver(int ** graph, int size, int size_population, int
 
 #ifdef PRINT_TIME
 #ifdef PRINT_CROSSOVER_TIME
+    int crossover_time = 0;
+    crossover_time = std::accumulate(crossover_times->begin(), crossover_times->end(), 0) / nw;
     std::cout << "Crossover requires " << "\t" << crossover_time << " usecs with "<< nw <<" threads " << std::endl;
 #endif
 #ifdef PRINT_MUTATION_TIME
+    int mutation_time = 0; 
+    mutation_time = std::accumulate(mutation_times->begin(), mutation_times->end(), 0) / nw;
     std::cout << "Mutation requires " << "\t" << mutation_time << " usecs with "<< nw <<" threads " << std::endl;
 #endif
 #ifdef PRINT_FITNESS_TIME
+    int fitness_time = 0;
+    fitness_time = std::accumulate(fitness_times->begin(), fitness_times->end(), 0) / nw;
     std::cout << "Fitness requires " << "\t" << fitness_time << " usecs with "<< nw <<" threads " << std::endl;
 #endif
 #ifdef PRINT_SELECTION_TIME
+    int selection_time = 0;
+    selection_time = std::accumulate(selection_times->begin(), selection_times->end(), 0) / nw;
     std::cout << "Selection requires " << "\t" << selection_time << " usecs with "<< nw <<" threads " << std::endl;
 #endif
 #ifdef PRINT_SHUFFLE_TIME
     std::cout << "Sorting requires " << "\t" << shuffling_time << " usecs with "<< nw <<" threads " << std::endl;
 #endif
+    for(int i=0; i<nw; i++){
+        std::cout << selection_times->at(i) <<"  "; 
+    }
+    std::cout << std::endl;
     std::cout << "Execution took " << "\t" << tot_time << " usecs with "<< nw <<" threads " << std::endl;
 #endif
 

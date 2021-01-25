@@ -39,3 +39,5 @@
 DEFINITIVE_RESULTS/smp_venv/
 
 .vscode
+
+*.ipynb

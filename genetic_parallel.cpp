@@ -13,7 +13,7 @@
 #include <vector>
 
 #define PRINT_TIME = 1
-#define PRINT_OVERHEAD = 1
+// #define PRINT_OVERHEAD = 1
 
 #ifdef PRINT_TIME
 #ifndef PRINT_OVERHEAD
@@ -22,11 +22,16 @@
 #define PRINT_FITNESS_TIME = 1
 #define PRINT_SELECTION_TIME = 1
 #define PRINT_SHUFFLE_TIME = 1
-std::atomic<int> crossover_time = 0;
-std::atomic<int> mutation_time = 0;
-std::atomic<int> fitness_time = 0;
-std::atomic<int> selection_time = 0;
-std::atomic<int> shuffling_time = 0;
+// std::atomic<int> crossover_time = 0;
+// std::atomic<int> mutation_time = 0;
+// std::atomic<int> fitness_time = 0;
+// std::atomic<int> selection_time = 0;
+int shuffling_time = 0;
+
+std::vector<int> *crossover_times;
+std::vector<int> *mutation_times;
+std::vector<int> *fitness_times;
+std::vector<int> *selection_times;
 #endif
 #endif
 
@@ -75,7 +80,7 @@ bool insert_population(std::vector<path_t>* population, RANGE range, path_t chro
 void selection(std::vector<path_t>& population, RANGE range, std::set<path_t> new_generation){
     for (auto new_chromosome:new_generation){
         // If the new chromosome is already present continue with the next chromosome
-        if (std::find(population.begin()+range.start, population.begin()+range.end, new_chromosome) != (population.begin()+range.end)) continue;
+        // if (std::find(population.begin()+range.start, population.begin()+range.end, new_chromosome) != (population.begin()+range.end)) continue;
 
         auto max_el = std::max_element(population.begin()+range.start, population.begin()+range.end);
 
@@ -134,11 +139,11 @@ std::vector<int> create_child(std::vector<int>& chromos, std::vector<int> chromo
             mask[chromos2[i]] = true;
         } else{
             for(int j=0; j<chromo_len; j++){
-            if (!mask[chromos2[j]]) {
-                child.push_back(chromos2[j]);
-                mask[chromos2[j]] = true;
-                break;
-            }
+                if (!mask[chromos2[j]]) {
+                    child.push_back(chromos2[j]);
+                    mask[chromos2[j]] = true;
+                    break;
+                }
             }  
         }
     }
@@ -183,7 +188,8 @@ void genetic_algorithm (
     std::vector<path_t> *population,
     RANGE range,
     float p_crossover,
-    float p_mutation
+    float p_mutation,
+    int t_id
 ) {
 #ifndef PRINT_OVERHEAD // Timer overhead
     std::set<path_t> new_generation;
@@ -207,7 +213,7 @@ void genetic_algorithm (
 #ifdef PRINT_CROSSOVER_TIME
             auto elapsed_crossover = std::chrono::high_resolution_clock::now() - start_crossover;
             auto usec_crossover = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_crossover).count();
-            crossover_time += usec_crossover;
+            crossover_times->at(t_id) += usec_crossover;
 #endif
 
 // TIMER
@@ -223,7 +229,7 @@ void genetic_algorithm (
 #ifdef PRINT_FITNESS_TIME
             auto elapsed_fitness_child1 = std::chrono::high_resolution_clock::now() - start_fitness_child1;
             auto usec_fitness_child1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_fitness_child1).count();
-            fitness_time += usec_fitness_child1;
+            fitness_times->at(t_id) += usec_fitness_child1;
 #endif
 
         }
@@ -243,7 +249,7 @@ void genetic_algorithm (
 #ifdef PRINT_MUTATION_TIME
             auto elapsed_mutation = std::chrono::high_resolution_clock::now() - start_mutation;
             auto usec_mutation = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_mutation).count();
-            mutation_time += usec_mutation;
+            mutation_times->at(t_id) += usec_mutation;
 #endif
         }
 
@@ -262,7 +268,7 @@ void genetic_algorithm (
 #ifdef PRINT_FITNESS_TIME
             auto elapsed_fitness_child2 = std::chrono::high_resolution_clock::now() - start_fitness_child2;
             auto usec_fitness_child2 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_fitness_child2).count();
-            fitness_time += usec_fitness_child2;
+            fitness_times->at(t_id) += usec_fitness_child2;
 #endif
         }
 
@@ -277,7 +283,7 @@ void genetic_algorithm (
 #ifdef PRINT_SELECTION_TIME
     auto elapsed_selection = std::chrono::high_resolution_clock::now() - start_selection;
     auto usec_selection = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_selection).count();
-    selection_time += usec_selection;
+    selection_times->at(t_id) += usec_selection;
 #endif
 #endif
 }
