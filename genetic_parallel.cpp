@@ -5,6 +5,16 @@
  * Marco Cardia
  * Student ID: 530567
 */
+/*
+    File: genetic_parallel.cpp
+    It cointains all the functions that represents every phase of the genetic algorithm.
+    In particular:
+    - Crossover
+    - Mutation
+    - Fitness
+    - Selection
+    These are supposed to be executed in parallel
+*/
 #include <bits/stdc++.h>
 #include <chrono>
 #include <iostream>
@@ -17,21 +27,29 @@
 
 #ifdef PRINT_TIME
 #ifndef PRINT_OVERHEAD
-#define PRINT_CROSSOVER_TIME = 1
-#define PRINT_MUTATION_TIME = 1
-#define PRINT_FITNESS_TIME = 1
-#define PRINT_SELECTION_TIME = 1
-#define PRINT_SHUFFLE_TIME = 1
+// #define PRINT_CROSSOVER_TIME = 1
+// #define PRINT_MUTATION_TIME = 1
+// #define PRINT_FITNESS_TIME = 1
+// #define PRINT_SELECTION_TIME = 1
+// #define PRINT_SHUFFLE_TIME = 1
 // std::atomic<int> crossover_time = 0;
 // std::atomic<int> mutation_time = 0;
 // std::atomic<int> fitness_time = 0;
 // std::atomic<int> selection_time = 0;
 int shuffling_time = 0;
 
+#ifdef PRINT_CROSSOVER_TIME
 std::vector<int> *crossover_times;
+#endif
+#ifdef PRINT_MUTATION_TIME
 std::vector<int> *mutation_times;
+#endif
+#ifdef PRINT_FITNESS_TIME
 std::vector<int> *fitness_times;
+#endif
+#ifdef PRINT_SELECTION_TIME
 std::vector<int> *selection_times;
+#endif
 #endif
 #endif
 
@@ -78,13 +96,19 @@ bool insert_population(std::vector<path_t>* population, RANGE range, path_t chro
 }
 
 void selection(std::vector<path_t>& population, RANGE range, std::set<path_t> new_generation){
+    // TIMER
+#ifdef PRINT_SELECTION_TIME
+    auto start_selection = std::chrono::high_resolution_clock::now();
+#endif
     for (auto new_chromosome:new_generation){
         // If the new chromosome is already present continue with the next chromosome
-        // if (std::find(population.begin()+range.start, population.begin()+range.end, new_chromosome) != (population.begin()+range.end)) continue;
+        if (std::find(population.begin()+range.start, population.begin()+range.end, new_chromosome) != (population.begin()+range.end)) continue;
 
         auto max_el = std::max_element(population.begin()+range.start, population.begin()+range.end);
+        // auto max_el = std::max_element(population.begin(), population.begin());
 
         int pos = std::distance(population.begin()+range.start, max_el) + range.start;
+        // int pos = std::distance(population.begin(), max_el);
 
         if(new_chromosome.cost <= (*max_el).cost) {
             population[pos] = new_chromosome;
@@ -92,6 +116,13 @@ void selection(std::vector<path_t>& population, RANGE range, std::set<path_t> ne
             break;
         }
     }
+    // TIMER
+#ifdef PRINT_SELECTION_TIME
+    auto elapsed_selection = std::chrono::high_resolution_clock::now() - start_selection;
+    auto usec_selection = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_selection).count();
+    
+    std::cout<<"La new_generation è lunga "<<new_generation.size()<<" e ho impiegato "<<usec_selection<<std::endl;
+#endif
 }
 
 int fitness(int ** graph, std::vector<int>& path) {
@@ -133,18 +164,21 @@ std::vector<int> create_child(std::vector<int>& chromos, std::vector<int> chromo
         mask[chromos[i]] = true;
     }
 
+    // int idx_chromo2 = 0;
     for(int i=start; i<start+len; i++){
         if(!mask[chromos2[i]]){
             child.push_back(chromos2[i]);
             mask[chromos2[i]] = true;
         } else{
+            // for(int j=idx_chromo2; j<chromo_len; j++){
             for(int j=0; j<chromo_len; j++){
                 if (!mask[chromos2[j]]) {
                     child.push_back(chromos2[j]);
                     mask[chromos2[j]] = true;
+                    // idx_chromo2++;
                     break;
                 }
-            }  
+            }
         }
     }
 

@@ -5,6 +5,11 @@
  * Marco Cardia
  * Student ID: 530567
 */
+/*
+    File: tsp_parallel_thread.cpp
+    It contains the formalization of the Travelling Salesman Problem.
+    Moreover it initialize its solutions by means of Genetic Algorithm.
+*/
 // #define PRINT_CONVERGENCE = 1;
 // #define PRINT_SOLUTION = 1;
 
@@ -78,24 +83,36 @@ path_t travellingSalesmanSolver(int ** graph, int size, int size_population, int
 
     // TIMES
 #ifdef PRINT_TIME
+#ifdef PRINT_CROSSOVER_TIME
     crossover_times = new std::vector<int>(nw);
-    mutation_times = new std::vector<int>(nw);
-    fitness_times = new std::vector<int>(nw);
-    selection_times = new std::vector<int>(nw);
-
     for(int i=0; i<nw; i++){
         crossover_times->push_back(0);
+    }
+#endif
+#ifdef PRINT_MUTATION_TIME
+    mutation_times = new std::vector<int>(nw);
+    for(int i=0; i<nw; i++){
         mutation_times->push_back(0);
+    }
+#endif
+#ifdef PRINT_FITNESS_TIME
+    fitness_times = new std::vector<int>(nw);
+    for(int i=0; i<nw; i++){
         fitness_times->push_back(0);
+    }
+#endif
+#ifdef PRINT_SELECTION_TIME
+    selection_times = new std::vector<int>(nw);
+    for(int i=0; i<nw; i++){
         selection_times->push_back(0);
     }
 #endif
 
-
+#endif
 
     path_t min_path;
     min_path.cost = INT_MAX;
-    float p_crossover = 0.2, p_mutation = 0.2;
+    float p_crossover = 1.0, p_mutation = 1.0;
 
     // Initialise the population
     std::vector<path_t>* population;
@@ -163,6 +180,10 @@ path_t travellingSalesmanSolver(int ** graph, int size, int size_population, int
     int crossover_time = 0;
     crossover_time = std::accumulate(crossover_times->begin(), crossover_times->end(), 0) / nw;
     std::cout << "Crossover requires " << "\t" << crossover_time << " usecs with "<< nw <<" threads " << std::endl;
+    std::cout<<"Il tempo richiesto da ciascun thread per l'esecuzione del crossover: "<<std::endl;
+    for(int i=0; i<nw; i++){
+        std::cout << crossover_times->at(i) <<"  "; 
+    }
 #endif
 #ifdef PRINT_MUTATION_TIME
     int mutation_time = 0; 
@@ -178,13 +199,14 @@ path_t travellingSalesmanSolver(int ** graph, int size, int size_population, int
     int selection_time = 0;
     selection_time = std::accumulate(selection_times->begin(), selection_times->end(), 0) / nw;
     std::cout << "Selection requires " << "\t" << selection_time << " usecs with "<< nw <<" threads " << std::endl;
+    std::cout<<"Il tempo richiesto da ciascun thread per l'esecuzione della selection: "<<std::endl;
+    for(int i=0; i<nw; i++){
+        std::cout << selection_times->at(i) <<"  "; 
+    }
 #endif
 #ifdef PRINT_SHUFFLE_TIME
     std::cout << "Sorting requires " << "\t" << shuffling_time << " usecs with "<< nw <<" threads " << std::endl;
 #endif
-    for(int i=0; i<nw; i++){
-        std::cout << selection_times->at(i) <<"  "; 
-    }
     std::cout << std::endl;
     std::cout << "Execution took " << "\t" << tot_time << " usecs with "<< nw <<" threads " << std::endl;
 #endif
@@ -199,7 +221,7 @@ path_t travellingSalesmanSolver(int ** graph, int size, int size_population, int
     return *(std::min_element(population->begin(), population->end()));
 }
 
-// driver program to test above function
+
 int main(int argc, char * argv[]) {
    if(argc!=6) {
       std::cout << "Usage is: " << argv[0] << " number_nodes size_population epochs seed nw" << std::endl;
